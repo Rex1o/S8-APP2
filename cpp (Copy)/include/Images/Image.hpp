@@ -17,7 +17,7 @@ public:
     inline uchar* GetData() const { return m_OpenCVImage_.data; }
     inline const uchar* GetConstData() const { return m_OpenCVImage_.data; }
 
-    cv::Vec3b GetPixel(uint x, uint y) {  return m_OpenCVImage_.at<cv::Vec3b>(y, x);} 
+    cv::Vec3b GetPixel(uint x, uint y) { return m_OpenCVImage_.at<cv::Vec3b>(y, x); } 
     void Display(const std::string windowName);
 protected:
     cv::Mat m_OpenCVImage_;

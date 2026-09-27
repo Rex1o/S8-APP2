@@ -1,5 +1,5 @@
 #pragma once
-#include <Image.hpp>
+#include <Images/Image.hpp>
 #include <cassert>
 #include <opencv2/opencv.hpp>
 
@@ -22,6 +22,19 @@ public:
     ImageGray RescaleBilinear(uint newHeight, uint newWidth);
     
     ImageGray RescaleBicubic(uint newHeight, uint newWidth);
+
+    void GetMeanAndVariance(float& mean, float& variance) const;
+    void GetMinAndMax(uchar& min, uchar& max) const;
+
 private:
+    friend class AdaptiveQuantizer;
+    friend class BTCQuantizer;
+    friend class DCTQuantizer;
+    friend class DPCMQuantizer;
+    friend class VectorQuantizer;
+    friend class UniformQuantizer;
+    friend class FowardAdaptiveGaussQuantizer;
+    friend class JayantQuantizer;
+
     static double CardinalCubic(double p0, double p1, double p2, double p3, double t);
 };

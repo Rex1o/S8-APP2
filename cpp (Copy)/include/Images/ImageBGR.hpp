@@ -1,6 +1,6 @@
 #pragma once
-#include <Image.hpp>
-#include <ImageGray.hpp>
+#include <Images/Image.hpp>
+#include <Images/ImageGray.hpp>
 #include <string>
 
 class ImageBGR : public Image

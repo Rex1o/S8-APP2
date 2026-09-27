@@ -1,4 +1,4 @@
-#include <ImageGray.hpp>
+#include <Images/ImageGray.hpp>
 #include <cassert>
 #include <opencv2/opencv.hpp>
 #include <algorithm>
@@ -11,7 +11,7 @@ ImageGray::ImageGray(cv::Mat image)
 
 ImageGray::ImageGray(const ImageGray &image)
 {
-    m_OpenCVImage_ = image.m_OpenCVImage_.clone();
+    m_OpenCVImage_ = image.m_OpenCVImage_;
 }
 
 ImageGray ImageGray::RescaleNearestNeigbor(uint newHeight, uint newWidth)
@@ -28,8 +28,6 @@ ImageGray ImageGray::RescaleNearestNeigbor(uint newHeight, uint newWidth)
     double xScaleFactor =  static_cast<double>(GetWidth()) / static_cast<double>(newWidth);
     double yScaleFactor =  static_cast<double>(GetHeight()) / static_cast<double>(newHeight); 
     
-    double maxWidthIndexDouble = static_cast<double>(GetWidth() - 1);
-    double maxHeightIndexDouble = static_cast<double>(GetHeight() - 1);
     // Pixels in opencv are contiguous in the rows so start with y as the for loop
     // this increases the cache locality
     for (size_t y = 0; y < newHeight; y++)
@@ -183,8 +181,28 @@ ImageGray ImageGray::RescaleBicubic(uint newHeight, uint newWidth)
     return ImageGray(newImage);
 }
 
+void ImageGray::GetMeanAndVariance(float& mean, float& variance) const
+{ 
+    cv::Scalar imageMean;
+    cv::Scalar imageStdDev;
+    cv::meanStdDev(m_OpenCVImage_, imageMean, imageStdDev);
+    mean = static_cast<float>(imageMean[0]);
+    float stdDev = static_cast<float>(imageStdDev[0]);
+    variance =  stdDev * stdDev;
+}
+
+void ImageGray::GetMinAndMax(uchar& min, uchar& max) const
+{
+    double doubleMin;
+    double doubleMax;
+
+    cv::minMaxLoc(m_OpenCVImage_, &doubleMin, &doubleMax);
+    min = static_cast<uchar>(doubleMin);
+    max = static_cast<uchar>(doubleMax);
+}
+
 // see https://en.wikipedia.org/wiki/Bicubic_interpolation
-// https://www.cs.ubc.ca/~rhodin/2023_2024_CPSC_427/lectures/14_curves_and_animation.pdf?utm_source=chatgpt.com
+// https://www.cs.ubc.ca/~rhodin/2023_2024_CPSC_427/lectures/14_curves_and_animation.pdf
 double ImageGray::CardinalCubic(double p0, double p1, double p2, double p3, double t)
 {
     constexpr double tension = 0.5;   // Catmull–Rom

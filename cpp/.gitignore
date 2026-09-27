@@ -1,3 +1,4 @@
-/build
-/.vscode/browse.*
-/.vscode/settings.json
+build/
+.vscode/browse.*
+.vscode/browse.vc.db
+.vscode/settings.json

@@ -1,0 +1,9 @@
+{
+    "cmake.sourceDirectory": "/home/math/Documents/repos/S8-APP2/cpp",
+    "python.autoComplete.extraPaths": [
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ]
+}

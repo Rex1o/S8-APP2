@@ -15,16 +15,15 @@ int main(int argcount, char** args)
     
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     ImageGray grayImage = image.GetAsGrayImage();
+
     ImageGray bicubic = grayImage.RescaleBicubic(256, 256);
-    
-    // Uniform
-    uchar* data = UniformQuantizer::QuantizeAndPack(bicubic, 4);
-    ImageGray uniformImage = UniformQuantizer::Unpack(data);
-    uniformImage.Display("Uniform");
+    ImageGray bilinear = grayImage.RescaleBilinear(256, 256);
+    bicubic.Display("Bicubic");
+    bilinear.Display("Bilinear");
 
-
-    // ImageGray vectorImage =  JayantQuantizer::Unpack(data);
-    // vectorImage.Display("Jayant");
+    uchar* data = JayantQuantizer::QuantizeAndPack(bicubic, 3);
+    ImageGray vectorImage =  JayantQuantizer::Unpack(data);
+    vectorImage.Display("Jayant");
 
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
     std::cout << "Time: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";

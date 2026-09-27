@@ -18,7 +18,7 @@
             "name": "Release",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/release/bin/image_compression",
+            "program": "${workspaceFolder}/build/release/image_compression",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
