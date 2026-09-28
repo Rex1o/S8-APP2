@@ -1,5 +1,8 @@
 #include <Quantizers/DCTQuantizer.hpp>
-#include <Quantizers/LaplaceQuantizer.hpp>
+#include <Quantizers/LaplacianLloydMaxQuantizer.hpp>
+#include <stdexcept>
+#include <cstring>
+#include <cmath>
 #include <BitStream.hpp>
 #include <optional>
 
@@ -7,8 +10,7 @@
 std::vector<uint8_t> CalculateBitAllocation(const std::vector<float>& variances, size_t coefficientCount, uint8_t bitsPerPixel)
 {
     assert(variances.size() == coefficientCount);
-    assert(bitsPerPixel >= 0.0f);
-    uint8_t maxBits =  LaplacianDCTQuantizer::MAX_BIT_COUNT;
+    uint8_t maxBits =  LaplacianLloydMaxQuantizer::MAX_BIT_COUNT;
 
     const size_t totalBitCount = static_cast<size_t>(bitsPerPixel) * coefficientCount;
 
@@ -70,6 +72,8 @@ void StreamBloc(const cv::Mat& bloc, std::vector<double>& sums, std::vector<doub
 
 PackedData DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount, uint8_t blocSize)
 {
+    if (blocSize == 0 || image.GetWidth() % blocSize || image.GetHeight() % blocSize || bitCount == 0 || bitCount > 8)
+        throw std::invalid_argument("Invalid DCT block size or bit count");
     // Go trough all the blocs in the image
     const uint32_t blockCountX = image.GetWidth() / blocSize;
     const uint32_t blockCountY = image.GetHeight() / blocSize;
@@ -77,7 +81,6 @@ PackedData DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCoun
     const uint32_t coefficientCount =  blocSize * blocSize;
     const size_t pixelCount = image.GetWidth() * image.GetHeight();
     
-    cv::Mat dctImage(image.GetHeight(), image.GetWidth(), CV_32FC1);
     std::vector<double> sums(coefficientCount, 0.0);
     std::vector<double> squaredSums(coefficientCount, 0.0);
     std::vector<cv::Mat> DCTValues(blockCount);
@@ -114,19 +117,16 @@ PackedData DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCoun
 
     std::vector<uint8_t> bitsPerPixel =  CalculateBitAllocation(variances, coefficientCount, bitCount);
     
-    std::vector<std::optional<LaplacianDCTQuantizer>> quantizers(coefficientCount);
-
+    std::vector<std::optional<LaplacianLloydMaxQuantizer>> quantizers(coefficientCount);
     for (size_t i = 0; i < coefficientCount; ++i)
     {
-        if (bitsPerPixel[i] == 0)
+        if (bitsPerPixel[i] != 0)
         {
-            continue;
+            quantizers[i].emplace(bitsPerPixel[i], means[i], std::sqrt(variances[i]));
         }
-
-        quantizers[i].emplace(bitsPerPixel[i], means[i], std::sqrt(variances[i]));
     }
 
-    // Bit packing const
+    // Shared tables require only mean and variance for each DCT position.
     const size_t meansSize = coefficientCount * sizeof(float);
     const size_t variancesSize = coefficientCount * sizeof(float);
     const size_t bitCountsSize = coefficientCount * sizeof(uint8_t);
@@ -241,16 +241,14 @@ ImageGray DCTQuantizer::Unpack(uchar* packedData)
 
 
     // Recreate quantizers
-    std::vector<std::optional<LaplacianDCTQuantizer>> quantizers(coefficientCount);
-
+    std::vector<std::optional<LaplacianLloydMaxQuantizer>> quantizers(coefficientCount);
+    
     for (size_t i = 0; i < coefficientCount; ++i)
     {
-        if (bitsPerPixel[i] == 0)
+        if (bitsPerPixel[i] != 0)
         {
-            continue;
+            quantizers[i].emplace(bitsPerPixel[i], means[i], std::sqrt(variances[i]));
         }
-
-        quantizers[i].emplace(bitsPerPixel[i], means[i], std::sqrt(variances[i]));
     }
 
 

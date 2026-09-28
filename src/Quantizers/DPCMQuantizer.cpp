@@ -7,6 +7,7 @@
 #include <vector>
 #include <Quantizers/GaussianPixelQuantizer.hpp>
 #include <BitStream.hpp>
+#include <Quantizers/LaplacianLloydMaxQuantizer.hpp>
 
 // Median Edge Detector Prediction
 static int PredictMED(const cv::Mat& reconstructedImage, uint32_t x, uint32_t y)
@@ -114,7 +115,7 @@ PackedData DPCMQuantizer::QuantizeAndPack(const ImageGray& image,uint8_t bitCoun
 
     CalculateMEDPredictionErrorStatistics(image, errorMean, errorStdDev);
 
-    GaussianErrorQuantizer gaussQuantizer(bitCount, errorMean, errorStdDev);
+    LaplacianLloydMaxQuantizer gaussQuantizer(bitCount, errorMean, errorStdDev);
 
     // First pixel is it's full = 8 bits
     // Remaining pixels = bitCount bits each
@@ -190,7 +191,7 @@ ImageGray DPCMQuantizer::Unpack(uchar* packedData)
 
     std::memcpy(&header, packedData, sizeof(DPCMHeader));
 
-    GaussianErrorQuantizer gaussQuantizer(header.bitCount, header.errorMean, header.errorStdDev);
+    LaplacianLloydMaxQuantizer gaussQuantizer(header.bitCount, header.errorMean, header.errorStdDev);
 
     BitReader reader(packedData + sizeof(DPCMHeader));
 

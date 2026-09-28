@@ -110,7 +110,8 @@ int main(int argcount, char** args)
     ImageGray I_decodedBTC = BTCQuantizer::Unpack(btcFileData.data());
     
     // DCT
-    PackedData I_encodedDCT = DCTQuantizer::QuantizeAndPack(I_reduced, 5, 8);
+    // a 4 bit per pixel
+    PackedData I_encodedDCT = DCTQuantizer::QuantizeAndPack(I_reduced, 5, 4);
     WritePackedData(dctPath, I_encodedDCT);
     std::vector<uchar> dctFileData = ReadPackedData(dctPath);
     ImageGray I_decodedDCT = DCTQuantizer::Unpack(dctFileData.data());
