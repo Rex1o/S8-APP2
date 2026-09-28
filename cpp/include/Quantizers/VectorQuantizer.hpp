@@ -32,9 +32,9 @@ struct VectorArray
 
 struct UcharDict
 {
+    uchar* values;
     uint8_t vectorCount;
     uint8_t vectorSize;
-    uchar* values;
 
     UcharDict(uint8_t vectorCount, uint8_t vectorSize);
     UcharDict(const VectorArray& vectorArray);
@@ -62,7 +62,7 @@ struct UcharDict
 class VectorQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize, float& bitPerPixel);
+    static PackedData QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize);
     static ImageGray Unpack(uchar* packedData);
 
 private:

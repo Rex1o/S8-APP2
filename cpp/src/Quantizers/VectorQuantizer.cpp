@@ -136,7 +136,7 @@ VectorArray VectorArray::DoubleVectors()
     return newVectorArray;
 }
 
-uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize, float& bitPerPixel)
+PackedData VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize)
 {
     // Train dictionary
     VectorArray vectorArray = TrainLBG(image, vectorBitCount, blocSize);
@@ -149,12 +149,12 @@ uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBi
     // Number of bytes required for packed indices
     const size_t indexBitCount = static_cast<size_t>(blockCount) * vectorBitCount;
     const size_t packedIndexSize = (indexBitCount + 7) / 8;
-    const size_t fileSize = sizeof(VectorQuantizedImageHeader) + ucharDict.GetDataSize() + packedIndexSize;
+    const size_t outputSize = sizeof(VectorQuantizedImageHeader) + ucharDict.GetDataSize() + packedIndexSize;
     
     const size_t pixelCount = image.GetWidth() * image.GetHeight();
-    bitPerPixel = static_cast<float>(fileSize) / static_cast<float>(pixelCount) * 8.0f;
+    
     // Zero initialize because the last byte may only be partially used
-    uchar* fullFile = new uchar[fileSize]{};
+    uchar* output = new uchar[outputSize]{};
 
     // Header
     VectorQuantizedImageHeader header;
@@ -162,10 +162,10 @@ uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBi
     header.height = image.GetHeight();
     header.vectorBitCount = vectorBitCount;
     header.blocSize = blocSize;
-    std::memcpy(fullFile, &header, sizeof(VectorQuantizedImageHeader));
+    std::memcpy(output, &header, sizeof(VectorQuantizedImageHeader));
 
     // Dictionary
-    uchar* dictionaryData = fullFile + sizeof(VectorQuantizedImageHeader);
+    uchar* dictionaryData = output + sizeof(VectorQuantizedImageHeader);
     std::memcpy(dictionaryData, ucharDict.values, ucharDict.GetDataSize());
     
     // Packed block indices
@@ -181,7 +181,8 @@ uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBi
 
     delete[] blockIndices;
 
-    return fullFile;
+    float bitPerPixel = static_cast<float>(outputSize) / static_cast<float>(pixelCount) * 8.0f;
+    return PackedData{output, outputSize, bitPerPixel};
 }
 
 ImageGray VectorQuantizer::Unpack(uchar* packedData)
@@ -218,11 +219,7 @@ ImageGray VectorQuantizer::Unpack(uchar* packedData)
     const uint32_t blockCountY = height / blocSize;
     const uint32_t blockCount = blockCountX * blockCountY;
 
-    // ------------------------------------------------------------
     // Unpack indices and reconstruct blocks
-    // ------------------------------------------------------------
-
-    const uint64_t indexMask = (1ULL << vectorBitCount) - 1ULL;
     BitReader reader(packedIndices);
 
     for (uint32_t blockIndex = 0; blockIndex < blockCount; ++blockIndex)
@@ -370,7 +367,7 @@ double VectorQuantizer::RecalculateCentroids(const ImageGray& image, VectorArray
     {
         if (centroidCounts[vectorIndex] == 0)
         {
-            // TODO Ideally we would want to do something with emnpty clusters
+            // TODO Ideally we would want to do something with emnty clusters
             // Since they are basicly just dead values
             continue;
         }

@@ -3,6 +3,13 @@
 #include <cassert>
 #include <opencv2/opencv.hpp>
 
+struct PackedData
+{
+    uchar* data = nullptr;
+    size_t size = 0;
+    float bitsPerPixel;
+};
+
 class ImageGray : public Image 
 {
 public:
@@ -28,14 +35,5 @@ public:
     double CalculatePSNR(const ImageGray& other) const;
 
 private:
-    friend class AdaptiveQuantizer;
-    friend class BTCQuantizer;
-    friend class DCTQuantizer;
-    friend class DPCMQuantizer;
-    friend class GaussQuantizer;
-    friend class JayantQuantizer;
-    friend class UniformQuantizer;
-    friend class VectorQuantizer;
-
     static double CardinalCubic(double p0, double p1, double p2, double p3, double t);
 };

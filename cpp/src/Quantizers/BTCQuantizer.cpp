@@ -66,7 +66,7 @@ namespace
     }
 }
 
-uchar *BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstructLevelBitCount, uint8_t blocSize, float& bitPerPixel)
+PackedData BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstructLevelBitCount, uint8_t blocSize)
 {
     // Go trough all the blocs in the image
     const uint32_t blockCountX = image.GetWidth() / blocSize;
@@ -86,15 +86,14 @@ uchar *BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstruc
     const size_t packedDataSize = (dataBitCount + 7) / 8;
 
     const size_t totalDataSize = packedDataSize + sizeof(BTCHeader);
-    bitPerPixel = static_cast<float>(totalDataSize) / static_cast<float>(pixelCount) * 8.0f;
     uchar* data = new uchar[totalDataSize];
     std::memcpy(data, &header, sizeof(BTCHeader));
-
+    
     uchar* packedDataPtr = data + sizeof(BTCHeader);
-
+    
     BitWriter writer(packedDataPtr);
     UniformPixelQuantizer uniformQuantizer(resconstructLevelBitCount);
-
+    
     for (size_t y = 0; y < image.GetHeight(); y += blocSize)
     {
         for (size_t x = 0; x < image.GetWidth(); x += blocSize)
@@ -113,15 +112,16 @@ uchar *BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstruc
             
             uchar quantizedA = uniformQuantizer.Quantize(A8);
             uchar quantizedB = uniformQuantizer.Quantize(B8);
-
+            
             writer.Write(quantizedA, resconstructLevelBitCount);
             writer.Write(quantizedB, resconstructLevelBitCount);
             WriteBlockBitmap(bloc, writer, splitValue, equalNeeded);
         }
     }
     writer.Flush();
-
-    return data;
+    
+    float bitPerPixel = static_cast<float>(totalDataSize) / static_cast<float>(pixelCount) * 8.0f;
+    return PackedData {data, totalDataSize, bitPerPixel};
 }
 
 ImageGray BTCQuantizer::Unpack(uchar* packedData)

@@ -103,7 +103,7 @@ void DPCMQuantizer::CalculateMEDPredictionErrorStatistics(const ImageGray& image
 }
 
 
-uchar* DPCMQuantizer::QuantizeAndPack(const ImageGray& image,uint8_t bitCount, float& bitPerPixel)
+PackedData DPCMQuantizer::QuantizeAndPack(const ImageGray& image,uint8_t bitCount)
 {
     const uint32_t width = image.GetWidth();
     const uint32_t height = image.GetHeight();
@@ -123,7 +123,6 @@ uchar* DPCMQuantizer::QuantizeAndPack(const ImageGray& image,uint8_t bitCount, f
 
     const size_t outputSize = sizeof(DPCMHeader) + packedDataSize;
     
-    bitPerPixel = static_cast<float>(outputSize) / static_cast<float>(pixelCount) * 8.0f;
     uchar* output = new uchar[outputSize]{};
 
     DPCMHeader header;
@@ -181,7 +180,8 @@ uchar* DPCMQuantizer::QuantizeAndPack(const ImageGray& image,uint8_t bitCount, f
 
     writer.Flush();
 
-    return output;
+    float bitPerPixel = static_cast<float>(outputSize) / static_cast<float>(pixelCount) * 8.0f;
+    return PackedData {output, outputSize, bitPerPixel};
 }
 
 ImageGray DPCMQuantizer::Unpack(uchar* packedData)

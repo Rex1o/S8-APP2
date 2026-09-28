@@ -6,7 +6,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/debug/image_compression",
-            "args": [],
+            "args": [
+                "/home/math/Documents/school/S8/App2/images/baboon.png"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "externalConsole": false,
@@ -19,7 +21,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/release/image_compression",
-            "args": [],
+            "args": [
+                "/home/math/Documents/school/S8/App2/images/baboon.png"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "externalConsole": false,

@@ -11,7 +11,7 @@ struct UniformImageHeader
 class UniformQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
+    static PackedData QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
     static ImageGray Unpack(uchar* packedData);
 };
 
@@ -27,7 +27,7 @@ struct GaussImageHeader
 class GaussQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
+    static PackedData QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
     static ImageGray Unpack(uchar* packedData);
 };
 
@@ -39,11 +39,10 @@ struct JayantQuantizedImageHeader
     uint8_t bitsPerPixel;
 };
 
-// TODO comme back here, image is not pretty at all.
 class JayantQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
+    static PackedData QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
     static ImageGray Unpack(uchar* packedData);
 
 private:
