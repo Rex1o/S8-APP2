@@ -1,5 +1,10 @@
 {
-    "cmake.sourceDirectory": "/home/math/Documents/repos/S8-APP2/cpp",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
     "python.autoComplete.extraPaths": [
         "/opt/ros/jazzy/lib/python3.12/site-packages"
     ],

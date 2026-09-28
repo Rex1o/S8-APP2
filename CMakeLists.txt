@@ -65,6 +65,12 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${opencv_SOURCE_DIR}/include
+        ${opencv_SOURCE_DIR}/modules/core/include
+        ${opencv_SOURCE_DIR}/modules/imgproc/include
+        ${opencv_SOURCE_DIR}/modules/imgcodecs/include
+        ${opencv_SOURCE_DIR}/modules/highgui/include
+        ${opencv_BINARY_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
