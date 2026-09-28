@@ -11,7 +11,7 @@ struct UniformImageHeader
 class UniformQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
+    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
     static ImageGray Unpack(uchar* packedData);
 };
 
@@ -27,7 +27,7 @@ struct GaussImageHeader
 class GaussQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
+    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
     static ImageGray Unpack(uchar* packedData);
 };
 
@@ -43,7 +43,7 @@ struct JayantQuantizedImageHeader
 class JayantQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
+    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
     static ImageGray Unpack(uchar* packedData);
 
 private:

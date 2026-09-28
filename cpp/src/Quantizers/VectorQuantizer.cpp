@@ -136,16 +136,13 @@ VectorArray VectorArray::DoubleVectors()
     return newVectorArray;
 }
 
-uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize)
+uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize, float& bitPerPixel)
 {
     // Train dictionary
     VectorArray vectorArray = TrainLBG(image, vectorBitCount, blocSize);
-
     // Find dictionary index for every image block
     uint32_t blockCount = 0;
-
     uchar* blockIndices = FindBlockIndices(image, vectorArray, blocSize, blockCount);
-
     // Convert floating-point centroids to uchar
     UcharDict ucharDict(vectorArray);
 
@@ -153,7 +150,9 @@ uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBi
     const size_t indexBitCount = static_cast<size_t>(blockCount) * vectorBitCount;
     const size_t packedIndexSize = (indexBitCount + 7) / 8;
     const size_t fileSize = sizeof(VectorQuantizedImageHeader) + ucharDict.GetDataSize() + packedIndexSize;
-
+    
+    const size_t pixelCount = image.GetWidth() * image.GetHeight();
+    bitPerPixel = static_cast<float>(fileSize) / static_cast<float>(pixelCount) * 8.0f;
     // Zero initialize because the last byte may only be partially used
     uchar* fullFile = new uchar[fileSize]{};
 

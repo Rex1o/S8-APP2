@@ -10,6 +10,7 @@ struct DCTHeader
 
 class DCTQuantizer
 {
-    static uchar* QuantizeAndPack(const ImageGray &image, uint8_t bitCount, uint8_t blocSize);
+public:
+    static uchar* QuantizeAndPack(const ImageGray &image, uint8_t bitCount, uint8_t blocSize, float& bitPerPixel);
     static ImageGray Unpack(uchar* packedData);
 };

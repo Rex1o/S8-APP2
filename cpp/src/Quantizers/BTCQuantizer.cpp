@@ -66,13 +66,14 @@ namespace
     }
 }
 
-uchar *BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstructLevelBitCount, uint8_t blocSize)
+uchar *BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstructLevelBitCount, uint8_t blocSize, float& bitPerPixel)
 {
     // Go trough all the blocs in the image
     const uint32_t blockCountX = image.GetWidth() / blocSize;
     const uint32_t blockCountY = image.GetHeight() / blocSize;
     const uint32_t blockCount = blockCountX * blockCountY;
-    
+    const size_t pixelCount = image.GetWidth() * image.GetHeight();
+
     BTCHeader header;
     header.width = image.GetWidth();
     header.height = image.GetHeight();
@@ -85,6 +86,7 @@ uchar *BTCQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t resconstruc
     const size_t packedDataSize = (dataBitCount + 7) / 8;
 
     const size_t totalDataSize = packedDataSize + sizeof(BTCHeader);
+    bitPerPixel = static_cast<float>(totalDataSize) / static_cast<float>(pixelCount) * 8.0f;
     uchar* data = new uchar[totalDataSize];
     std::memcpy(data, &header, sizeof(BTCHeader));
 

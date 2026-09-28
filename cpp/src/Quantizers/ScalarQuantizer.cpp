@@ -4,7 +4,7 @@
 #include <Quantizers/UniformQuantizer.hpp>
 
 // We should try with a Floyd–Steinberg dithering seems like we could have a way better image
-uchar *UniformQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t bitCount)
+uchar *UniformQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel)
 {
     if (bitCount == 0 || bitCount > 8)
     {
@@ -12,12 +12,13 @@ uchar *UniformQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t bitCoun
     }
 
     const uint32_t levels = 1u << bitCount;
-    const size_t dataBits = image.GetHeight() *  image.GetWidth() * bitCount;
+    const size_t pixelCount = image.GetWidth() * image.GetHeight();
+    const size_t dataBits = pixelCount * bitCount;
     const size_t packedDataSize = (dataBits + 7) / 8;
 
     size_t outputSize = sizeof(UniformImageHeader) + packedDataSize;
     unsigned char* output = new unsigned char[outputSize];
-
+    bitPerPixel = static_cast<float>(outputSize) / static_cast<float>(pixelCount) * 8.0f;
     UniformImageHeader header;
     header.width = image.GetWidth();
     header.height = image.GetHeight();
@@ -73,7 +74,7 @@ ImageGray UniformQuantizer::Unpack(uchar* packedData)
     return ImageGray(newImage);
 }
 
-uchar* GaussQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t bitCount)
+uchar* GaussQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel)
 {
     const size_t pixelCount = image.GetWidth() * image.GetHeight();
     const size_t dataBits = pixelCount * bitCount;
@@ -92,6 +93,7 @@ uchar* GaussQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t bitCount)
     header.bitsPerPixel = bitCount;
 
     const size_t outputSize = sizeof(GaussImageHeader) + packedDataSize;
+    bitPerPixel = static_cast<float>(outputSize) / static_cast<float>(pixelCount) * 8.0f;
 
     uchar* output = new uchar[outputSize];
     std::memcpy(output, &header, sizeof(header));
@@ -139,7 +141,7 @@ ImageGray GaussQuantizer::Unpack(uchar* packedData)
     return ImageGray(image);
 }
 
-uchar *JayantQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount)
+uchar *JayantQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount, float& bitPerPixel)
 {
     if (bitCount != 3)
     {
@@ -151,7 +153,7 @@ uchar *JayantQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount
     const size_t packedDataSize = (dataBits + 7) / 8;
     const size_t outputSize = sizeof(JayantQuantizedImageHeader) + packedDataSize;
     uchar* output = new uchar[outputSize];
-
+    bitPerPixel = static_cast<float>(outputSize) / static_cast<float>(pixelCount) * 8.0f;
     JayantQuantizedImageHeader header;
 
     header.width = image.GetWidth();
@@ -193,8 +195,6 @@ uchar *JayantQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount
                 bitsInBuffer -= 8;
             }
 
-            // IMPORTANT:
-            // q[n] changes delta for pixel n+1.
             delta *= GetMultiplier(quantized, bitCount);
 
             delta = std::clamp(delta, MIN_DELTA, MAX_DELTA);

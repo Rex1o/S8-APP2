@@ -67,13 +67,14 @@ void StreamBloc(const cv::Mat& bloc, std::vector<double>& sums, std::vector<doub
     }
 }
 
-uchar *DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount, uint8_t blocSize)
+uchar *DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount, uint8_t blocSize, float& bitPerPixel)
 {
     // Go trough all the blocs in the image
     const uint32_t blockCountX = image.GetWidth() / blocSize;
     const uint32_t blockCountY = image.GetHeight() / blocSize;
     const uint32_t blockCount = blockCountX * blockCountY;
     const uint32_t coefficientCount =  blocSize * blocSize;
+    const size_t pixelCount = image.GetWidth() * image.GetHeight();
     
     cv::Mat dctImage(image.GetHeight(), image.GetWidth(), CV_32FC1);
     std::vector<double> sums(blockCount, 0.0);
@@ -140,6 +141,8 @@ uchar *DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCount, u
     const size_t dataBitCount = static_cast<size_t>(blockCount) * bitsPerBlock;
     const size_t packedDataSize = (dataBitCount + 7) / 8;
     const size_t totalDataSize = metadataSize + packedDataSize;
+    bitPerPixel = static_cast<float>(totalDataSize) / static_cast<float>(pixelCount) * 8.0f;
+
     uchar* data = new uchar[totalDataSize]{};
     
     uchar* writePtr = data;

@@ -13,7 +13,7 @@ struct BTCHeader
 class BTCQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t resconstructLevelBitCount, uint8_t blocSize);
+    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t resconstructLevelBitCount, uint8_t blocSize, float& bitPerPixel);
     static ImageGray Unpack(uchar* packedData);
     static void MinimizeMSE(cv::Mat bloc, double& A, double& B, uchar& outSplitValue, size_t& outEqualNeeded);
 };

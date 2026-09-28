@@ -15,7 +15,7 @@ struct DPCMHeader
 class DPCMQuantizer
 {
 public:
-    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount);
+    static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount, float& bitPerPixel);
     static ImageGray Unpack(uchar* packedData);
     static void CalculateMEDPredictionErrorStatistics(const ImageGray& image, float& outMean, float& outStdDev);
 };
