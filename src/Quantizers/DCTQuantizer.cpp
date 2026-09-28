@@ -78,8 +78,8 @@ PackedData DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCoun
     const size_t pixelCount = image.GetWidth() * image.GetHeight();
     
     cv::Mat dctImage(image.GetHeight(), image.GetWidth(), CV_32FC1);
-    std::vector<double> sums(blockCount, 0.0);
-    std::vector<double> squaredSums(blockCount, 0.0);
+    std::vector<double> sums(coefficientCount, 0.0);
+    std::vector<double> squaredSums(coefficientCount, 0.0);
     std::vector<cv::Mat> DCTValues(blockCount);
 
     // Obtain the DFT for all possible blocs

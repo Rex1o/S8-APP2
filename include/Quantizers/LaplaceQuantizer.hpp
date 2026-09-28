@@ -13,16 +13,23 @@ public:
     LaplacianDCTQuantizer() = delete;
 
     LaplacianDCTQuantizer(uint8_t bitCount, float mean, float stddev)
-        : m_BitCount_(bitCount),
-          m_Mean_(mean),
-          m_StandardDeviation_(stddev),
-          m_Step_(laplacianSteps_[bitCount - 1] * stddev),
-          m_LevelCount_(1u << bitCount)
+    : m_BitCount_(bitCount),
+      m_Mean_(mean),
+      m_StandardDeviation_(stddev),
+      m_LevelCount_(1u << bitCount)
     {
         assert(bitCount >= 1 && bitCount <= 8);
-        assert(std::isfinite(mean));
-        assert(std::isfinite(stddev));
-        assert(stddev >= 0.0f);
+
+        constexpr float rangeInSigma = 4.0f;
+
+        if (stddev == 0.0f)
+        {
+            m_Step_ = 0.0f;
+        }
+        else
+        {
+            m_Step_ = (2.0f * rangeInSigma * stddev) / static_cast<float>(m_LevelCount_);
+        }
     }
 
     uint8_t Quantize(float value) const
@@ -52,6 +59,7 @@ public:
     }
 
 private:
+    // We decided not to use this. We will change the step size depending on the variance
     inline static constexpr float laplacianSteps_[8] = {
         1.4140f,
         1.0873f,
