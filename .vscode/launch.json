@@ -20,7 +20,7 @@
             "name": "Release",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/release/image_compression",
+            "program": "${workspaceFolder}/build/release/bin/image_compression",
             "args": [
                 "/home/math/Documents/school/S8/App2/images/baboon.png"
             ],

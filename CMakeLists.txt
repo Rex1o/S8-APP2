@@ -5,41 +5,19 @@ project(image_compression
     LANGUAGES CXX
 )
 
+# ============================================================
+# C++ configuration
+# ============================================================
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ============================================================
-# OpenCV
+# Dependencies
 # ============================================================
 
-include(FetchContent)
-
-# Disable OpenCV components that are not needed.
-set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(BUILD_PERF_TESTS OFF CACHE BOOL "" FORCE)
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BUILD_opencv_apps OFF CACHE BOOL "" FORCE)
-set(BUILD_DOCS OFF CACHE BOOL "" FORCE)
-
-set(BUILD_opencv_python2 OFF CACHE BOOL "" FORCE)
-set(BUILD_opencv_python3 OFF CACHE BOOL "" FORCE)
-set(BUILD_opencv_java OFF CACHE BOOL "" FORCE)
-
-set(WITH_IPP OFF CACHE BOOL "" FORCE)
-set(WITH_OPENCL OFF CACHE BOOL "" FORCE)
-set(WITH_CUDA OFF CACHE BOOL "" FORCE)
-set(WITH_FFMPEG OFF CACHE BOOL "" FORCE)
-set(WITH_GSTREAMER OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    opencv
-    GIT_REPOSITORY https://github.com/opencv/opencv.git
-    GIT_TAG 4.12.0
-    GIT_SHALLOW TRUE
-)
-
-FetchContent_MakeAvailable(opencv)
+find_package(OpenCV REQUIRED)
 
 # ============================================================
 # Application
@@ -62,18 +40,8 @@ add_executable(${PROJECT_NAME}
 # ============================================================
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    # Project headers
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-
-    # OpenCV generated headers
-    ${CMAKE_BINARY_DIR}
-
-    # OpenCV source headers
-    ${opencv_SOURCE_DIR}/include
-    ${opencv_SOURCE_DIR}/modules/core/include
-    ${opencv_SOURCE_DIR}/modules/imgproc/include
-    ${opencv_SOURCE_DIR}/modules/imgcodecs/include
-    ${opencv_SOURCE_DIR}/modules/highgui/include
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 # ============================================================
@@ -81,14 +49,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ============================================================
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    opencv_core
-    opencv_imgproc
-    opencv_imgcodecs
-    opencv_highgui
+    ${OpenCV_LIBS}
 )
 
 # ============================================================
-# Warnings
+# Compiler warnings
 # ============================================================
 
 if(MSVC)

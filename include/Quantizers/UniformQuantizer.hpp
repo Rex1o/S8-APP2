@@ -1,6 +1,5 @@
 #pragma once
 #include <cassert>
-#include <opencv2/opencv.hpp>
 
 
 class UniformPixelQuantizer

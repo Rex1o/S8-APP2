@@ -113,7 +113,6 @@ PackedData DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCoun
     }
 
     std::vector<uint8_t> bitsPerPixel =  CalculateBitAllocation(variances, coefficientCount, bitCount);
-
     
     std::vector<std::optional<LaplacianDCTQuantizer>> quantizers(coefficientCount);
 
@@ -168,8 +167,6 @@ PackedData DCTQuantizer::QuantizeAndPack(const ImageGray &image, uint8_t bitCoun
     writePtr += bitCountsSize;
 
     BitWriter writer(writePtr);
-
-
     for (size_t blockIndex = 0; blockIndex < DCTValues.size(); ++blockIndex)
     {
         const cv::Mat& dctBlock = DCTValues[blockIndex];

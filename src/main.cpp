@@ -3,7 +3,8 @@
 #include <fstream>
 #include <Images/ImageBGR.hpp>
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <Quantizers/BTCQuantizer.hpp>
 #include <Quantizers/DCTQuantizer.hpp>
 #include <Quantizers/DPCMQuantizer.hpp>
@@ -60,95 +61,92 @@ int main(int argcount, char** args)
         std::cerr << "Image does not exist: " << imagePath << '\n';
         return 1;
     }
-
-    // mandrill.tif -> mandrill/
+    
+    // Build all paths
     fs::path outputDirectory = imagePath.parent_path() / imagePath.stem();
-
     fs::create_directories(outputDirectory);
+    fs::path uniformPath = outputDirectory / "uniform.bin";
+    fs::path vectorPath = outputDirectory / "vector.bin";
+    fs::path gaussPath = outputDirectory / "gauss.bin";
+    fs::path dpcmPath = outputDirectory / "dpcm.bin";
+    fs::path btcPath = outputDirectory / "btc.bin";
+    fs::path dctPath = outputDirectory / "dct.bin";
 
-    ImageBGR image(imagePath.string());
-
+    ImageBGR I_source(imagePath.string());
     auto start = std::chrono::high_resolution_clock::now();
 
-    ImageGray grayImage = image.GetAsGrayImage();
-    ImageGray bicubic = grayImage.RescaleBicubic(256, 256);
-
-    cv::imwrite((outputDirectory / "original.png").string(), bicubic.m_OpenCVImage_);
+    ImageGray I_Gray = I_source.GetAsGrayImage();
+    ImageGray I_reduced = I_Gray.RescaleBicubic(256, 256);
+    cv::imwrite((outputDirectory / "original.png").string(), I_reduced.m_OpenCVImage_);
 
     // Uniform
-    PackedData uniformData = UniformQuantizer::QuantizeAndPack(bicubic, 5);
-    fs::path uniformPath = outputDirectory / "uniform.bin";
-    WritePackedData(uniformPath, uniformData);
-    // Delete memory to guarantee that Unpack isn't using it.
-    delete[] uniformData.data;
-    uniformData.data = nullptr;
+    PackedData I_encodedUniform = UniformQuantizer::QuantizeAndPack(I_reduced, 5);
+    WritePackedData(uniformPath, I_encodedUniform);    
     std::vector<uchar> uniformFileData = ReadPackedData(uniformPath);
-    ImageGray uniformImage = UniformQuantizer::Unpack(uniformFileData.data());
-    cv::imwrite((outputDirectory / "uniform.png").string(), uniformImage.m_OpenCVImage_);
-    double uniformPSNR = bicubic.CalculatePSNR(uniformImage);
-    std::cout << "Uniform | PSNR : " << uniformPSNR << " | Bits per pixel : " << uniformData.bitsPerPixel << std::endl;
-
+    ImageGray I_decodedUniform = UniformQuantizer::Unpack(uniformFileData.data());
+    
     // Vector
-    PackedData vectorData = VectorQuantizer::QuantizeAndPack(bicubic, 5, 1);
-    fs::path vectorPath = outputDirectory / "vector.bin";
-    WritePackedData(vectorPath, vectorData);
-    delete[] vectorData.data;
-    vectorData.data = nullptr;
+    PackedData I_encodedVector = VectorQuantizer::QuantizeAndPack(I_reduced, 5, 1);
+    WritePackedData(vectorPath, I_encodedVector);
     std::vector<uchar> vectorFileData = ReadPackedData(vectorPath);
-    ImageGray vectorImage = VectorQuantizer::Unpack(vectorFileData.data());
-    cv::imwrite((outputDirectory / "vector.png").string(), vectorImage.m_OpenCVImage_);
-    double vectorPSNR = bicubic.CalculatePSNR(vectorImage);
-    std::cout << "Vector | PSNR : " << vectorPSNR << " | Bits per pixel : " << vectorData.bitsPerPixel << '\n';
+    ImageGray I_decodedVector = VectorQuantizer::Unpack(vectorFileData.data());
 
     // Gaussian
-    PackedData gaussData = GaussQuantizer::QuantizeAndPack(bicubic, 5);
-    fs::path gaussPath = outputDirectory / "gauss.bin";
-    WritePackedData(gaussPath, gaussData);
-    delete[] gaussData.data;
-    gaussData.data = nullptr;
+    PackedData I_encodedGuass = GaussQuantizer::QuantizeAndPack(I_reduced, 5);
+    WritePackedData(gaussPath, I_encodedGuass);
     std::vector<uchar> gaussFileData = ReadPackedData(gaussPath);
-    ImageGray gaussImage = GaussQuantizer::Unpack(gaussFileData.data());
-    cv::imwrite((outputDirectory / "gauss.png").string(),gaussImage.m_OpenCVImage_);
-    double gaussPSNR = bicubic.CalculatePSNR(gaussImage);
-    std::cout << "Gauss | PSNR : " << gaussPSNR << " | Bits per pixel : " << gaussData.bitsPerPixel << std::endl;
-
+    ImageGray I_decodedGauss = GaussQuantizer::Unpack(gaussFileData.data());
+    
     // DPCM
-    PackedData dpcmData = DPCMQuantizer::QuantizeAndPack(bicubic, 5);
-    fs::path dpcmPath = outputDirectory / "dpcm.bin";
-    WritePackedData(dpcmPath, dpcmData);
-    delete[] dpcmData.data;
-    dpcmData.data = nullptr;
+    PackedData I_encodedDPCM = DPCMQuantizer::QuantizeAndPack(I_reduced, 5);
+    WritePackedData(dpcmPath, I_encodedDPCM);
     std::vector<uchar> dpcmFileData = ReadPackedData(dpcmPath);
-    ImageGray dpcmImage = DPCMQuantizer::Unpack(dpcmFileData.data());
-    cv::imwrite((outputDirectory / "dpcm.png").string(),dpcmImage.m_OpenCVImage_);
-    double dpcmPSNR = bicubic.CalculatePSNR(dpcmImage);
-    std::cout << "DPCM | PSNR : " << dpcmPSNR << " | Bits per pixel : " << dpcmData.bitsPerPixel << std::endl;
-
+    ImageGray I_decodedDPCM = DPCMQuantizer::Unpack(dpcmFileData.data());
+    
     // BTC
-    PackedData btcData = BTCQuantizer::QuantizeAndPack(bicubic, 8, 2);
-    fs::path btcPath = outputDirectory / "btc.bin";
-    WritePackedData(btcPath, btcData);
-    delete[] btcData.data;
-    btcData.data = nullptr;
+    PackedData I_encodedBTC = BTCQuantizer::QuantizeAndPack(I_reduced, 8, 2);
+    WritePackedData(btcPath, I_encodedBTC);
     std::vector<uchar> btcFileData = ReadPackedData(btcPath);
-    ImageGray btcImage = BTCQuantizer::Unpack(btcFileData.data());
-    cv::imwrite((outputDirectory / "btc.png").string(),btcImage.m_OpenCVImage_);
-    double btcPSNR = bicubic.CalculatePSNR(btcImage);
-
-    std::cout << "BTC | PSNR : " << btcPSNR << " | Bits per pixel : " << btcData.bitsPerPixel << std::endl;
-
+    ImageGray I_decodedBTC = BTCQuantizer::Unpack(btcFileData.data());
+    
     // DCT
-    PackedData dctData = DCTQuantizer::QuantizeAndPack(bicubic, 5, 2);
-    fs::path dctPath = outputDirectory / "dct.bin";
-    WritePackedData(dctPath, dctData);
-    delete[] dctData.data;
-    dctData.data = nullptr;
+    PackedData I_encodedDCT = DCTQuantizer::QuantizeAndPack(I_reduced, 5, 2);
+    WritePackedData(dctPath, I_encodedDCT);
     std::vector<uchar> dctFileData = ReadPackedData(dctPath);
-    ImageGray dctImage = DCTQuantizer::Unpack(dctFileData.data());
-    cv::imwrite((outputDirectory / "dct.png").string(),dctImage.m_OpenCVImage_);
-    double dctPSNR = bicubic.CalculatePSNR(dctImage);
-    std::cout << "DCT | PSNR : " << dctPSNR << " | Bits per pixel : " << dctData.bitsPerPixel << std::endl;
+    ImageGray I_decodedDCT = DCTQuantizer::Unpack(dctFileData.data());
+    
+    // Release memory
+    delete[] I_encodedBTC.data;
+    delete[] I_encodedDCT.data;
+    delete[] I_encodedDPCM.data;
+    delete[] I_encodedGuass.data;
+    delete[] I_encodedUniform.data;
+    delete[] I_encodedVector.data;
 
+    // Write all images
+    cv::imwrite((outputDirectory / "btc.png").string(), I_decodedBTC.m_OpenCVImage_);
+    cv::imwrite((outputDirectory / "dct.png").string(), I_decodedDCT.m_OpenCVImage_);
+    cv::imwrite((outputDirectory / "dpcm.png").string(), I_decodedDPCM.m_OpenCVImage_);
+    cv::imwrite((outputDirectory / "gauss.png").string(), I_decodedGauss.m_OpenCVImage_);
+    cv::imwrite((outputDirectory / "uniform.png").string(), I_decodedUniform.m_OpenCVImage_);
+    cv::imwrite((outputDirectory / "vector.png").string(), I_decodedVector.m_OpenCVImage_);
+    
+    // Calculate PSNR
+    double btcPSNR = I_reduced.CalculatePSNR(I_decodedBTC);
+    double dctPSNR = I_reduced.CalculatePSNR(I_decodedDCT);
+    double dpcmPSNR = I_reduced.CalculatePSNR(I_decodedDPCM);
+    double gaussPSNR = I_reduced.CalculatePSNR(I_decodedGauss);
+    double uniformPSNR = I_reduced.CalculatePSNR(I_decodedUniform);
+    double vectorPSNR = I_reduced.CalculatePSNR(I_decodedVector);
+
+    // Display data in console
+    std::cout << "BTC | PSNR : " << btcPSNR << " | Bits per pixel : " << I_encodedBTC.bitsPerPixel << std::endl;
+    std::cout << "DCT | PSNR : " << dctPSNR << " | Bits per pixel : " << I_encodedDCT.bitsPerPixel << std::endl;
+    std::cout << "DPCM | PSNR : " << dpcmPSNR << " | Bits per pixel : " << I_encodedDPCM.bitsPerPixel << std::endl;
+    std::cout << "Gauss | PSNR : " << gaussPSNR << " | Bits per pixel : " << I_encodedGuass.bitsPerPixel << std::endl;
+    std::cout << "Uniform | PSNR : " << uniformPSNR << " | Bits per pixel : " << I_encodedUniform.bitsPerPixel << std::endl;
+    std::cout << "Vector | PSNR : " << vectorPSNR << " | Bits per pixel : " << I_encodedVector.bitsPerPixel << std::endl;
+    
     // End clock
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << "\nTime: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";

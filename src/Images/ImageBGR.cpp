@@ -1,6 +1,6 @@
 #include <Images/ImageBGR.hpp>
 #include <cassert>
-#include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 ImageBGR::ImageBGR(const std::string &imagePath)
 {

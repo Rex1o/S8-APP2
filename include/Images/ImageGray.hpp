@@ -1,7 +1,7 @@
 #pragma once
 #include <Images/Image.hpp>
 #include <cassert>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 
 struct PackedData
 {
