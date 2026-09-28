@@ -5,7 +5,7 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/debug/image_compression",
+            "program": "${workspaceFolder}/build/debug/bin/image_compression",
             "args": [
                 "/home/math/Documents/school/S8/App2/images/baboon.png"
             ],

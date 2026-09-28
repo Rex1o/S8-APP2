@@ -1,6 +1,7 @@
 #include <Quantizers/DCTQuantizer.hpp>
 #include <Quantizers/LaplaceQuantizer.hpp>
 #include <BitStream.hpp>
+#include <optional>
 
 // Get the bit allocation matrix
 std::vector<uint8_t> CalculateBitAllocation(const std::vector<float>& variances, size_t coefficientCount, uint8_t bitsPerPixel)

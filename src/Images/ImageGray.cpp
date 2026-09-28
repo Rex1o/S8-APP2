@@ -1,6 +1,6 @@
 #include <Images/ImageGray.hpp>
 #include <cassert>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <algorithm>
 
 ImageGray::ImageGray(cv::Mat image)

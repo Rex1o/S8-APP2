@@ -15,22 +15,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
 
-# Only build the OpenCV modules used by this project.
-set(BUILD_LIST "core,imgproc,imgcodecs,highgui" CACHE STRING "" FORCE)
-
-# Disable unnecessary OpenCV components.
+# Disable OpenCV components that are not needed.
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_PERF_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_opencv_apps OFF CACHE BOOL "" FORCE)
 set(BUILD_DOCS OFF CACHE BOOL "" FORCE)
 
-# Disable language bindings.
 set(BUILD_opencv_python2 OFF CACHE BOOL "" FORCE)
 set(BUILD_opencv_python3 OFF CACHE BOOL "" FORCE)
 set(BUILD_opencv_java OFF CACHE BOOL "" FORCE)
 
-# Disable hardware/media backends we don't need.
 set(WITH_IPP OFF CACHE BOOL "" FORCE)
 set(WITH_OPENCL OFF CACHE BOOL "" FORCE)
 set(WITH_CUDA OFF CACHE BOOL "" FORCE)
@@ -62,31 +57,44 @@ add_executable(${PROJECT_NAME}
     src/Quantizers/VectorQuantizer.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${opencv_SOURCE_DIR}/include
-        ${opencv_SOURCE_DIR}/modules/core/include
-        ${opencv_SOURCE_DIR}/modules/imgproc/include
-        ${opencv_SOURCE_DIR}/modules/imgcodecs/include
-        ${opencv_SOURCE_DIR}/modules/highgui/include
-        ${opencv_BINARY_DIR}
-)
+# ============================================================
+# Include directories
+# ============================================================
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        opencv_core
-        opencv_imgproc
-        opencv_imgcodecs
-        opencv_highgui
+target_include_directories(${PROJECT_NAME} PRIVATE
+    # Project headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+
+    # OpenCV generated headers
+    ${CMAKE_BINARY_DIR}
+
+    # OpenCV source headers
+    ${opencv_SOURCE_DIR}/include
+    ${opencv_SOURCE_DIR}/modules/core/include
+    ${opencv_SOURCE_DIR}/modules/imgproc/include
+    ${opencv_SOURCE_DIR}/modules/imgcodecs/include
+    ${opencv_SOURCE_DIR}/modules/highgui/include
 )
 
 # ============================================================
-# Compiler warnings
+# Libraries
+# ============================================================
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    opencv_core
+    opencv_imgproc
+    opencv_imgcodecs
+    opencv_highgui
+)
+
+# ============================================================
+# Warnings
 # ============================================================
 
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /W4
+    )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(${PROJECT_NAME} PRIVATE
         -Wall

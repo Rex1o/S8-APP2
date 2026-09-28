@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstring>
 #include <cassert>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 
 class Image {
 public:
