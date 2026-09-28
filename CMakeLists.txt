@@ -31,7 +31,6 @@ add_executable(${PROJECT_NAME}
     src/Quantizers/BTCQuantizer.cpp
     src/Quantizers/DCTQuantizer.cpp
     src/Quantizers/DPCMQuantizer.cpp
-    src/Quantizers/ScalarQuantizer.cpp
     src/Quantizers/VectorQuantizer.cpp
 )
 

@@ -8,7 +8,6 @@
 #include <Quantizers/BTCQuantizer.hpp>
 #include <Quantizers/DCTQuantizer.hpp>
 #include <Quantizers/DPCMQuantizer.hpp>
-#include <Quantizers/ScalarQuantizer.hpp>
 #include <Quantizers/VectorQuantizer.hpp>
 #include <string>
 #include <vector>
@@ -78,24 +77,12 @@ int main(int argcount, char** args)
     ImageGray I_Gray = I_source.GetAsGrayImage();
     ImageGray I_reduced = I_Gray.RescaleBicubic(256, 256);
     cv::imwrite((outputDirectory / "original.png").string(), I_reduced.m_OpenCVImage_);
-
-    // Uniform
-    PackedData I_encodedUniform = UniformQuantizer::QuantizeAndPack(I_reduced, 5);
-    WritePackedData(uniformPath, I_encodedUniform);    
-    std::vector<uchar> uniformFileData = ReadPackedData(uniformPath);
-    ImageGray I_decodedUniform = UniformQuantizer::Unpack(uniformFileData.data());
     
     // Vector
     PackedData I_encodedVector = VectorQuantizer::QuantizeAndPack(I_reduced, 5, 1);
     WritePackedData(vectorPath, I_encodedVector);
     std::vector<uchar> vectorFileData = ReadPackedData(vectorPath);
     ImageGray I_decodedVector = VectorQuantizer::Unpack(vectorFileData.data());
-
-    // Gaussian
-    PackedData I_encodedGuass = GaussQuantizer::QuantizeAndPack(I_reduced, 5);
-    WritePackedData(gaussPath, I_encodedGuass);
-    std::vector<uchar> gaussFileData = ReadPackedData(gaussPath);
-    ImageGray I_decodedGauss = GaussQuantizer::Unpack(gaussFileData.data());
     
     // DPCM
     PackedData I_encodedDPCM = DPCMQuantizer::QuantizeAndPack(I_reduced, 5);
@@ -120,32 +107,24 @@ int main(int argcount, char** args)
     delete[] I_encodedBTC.data;
     delete[] I_encodedDCT.data;
     delete[] I_encodedDPCM.data;
-    delete[] I_encodedGuass.data;
-    delete[] I_encodedUniform.data;
     delete[] I_encodedVector.data;
 
     // Write all images
     cv::imwrite((outputDirectory / "btc.png").string(), I_decodedBTC.m_OpenCVImage_);
     cv::imwrite((outputDirectory / "dct.png").string(), I_decodedDCT.m_OpenCVImage_);
     cv::imwrite((outputDirectory / "dpcm.png").string(), I_decodedDPCM.m_OpenCVImage_);
-    cv::imwrite((outputDirectory / "gauss.png").string(), I_decodedGauss.m_OpenCVImage_);
-    cv::imwrite((outputDirectory / "uniform.png").string(), I_decodedUniform.m_OpenCVImage_);
     cv::imwrite((outputDirectory / "vector.png").string(), I_decodedVector.m_OpenCVImage_);
     
     // Calculate PSNR
     double btcPSNR = I_reduced.CalculatePSNR(I_decodedBTC);
     double dctPSNR = I_reduced.CalculatePSNR(I_decodedDCT);
     double dpcmPSNR = I_reduced.CalculatePSNR(I_decodedDPCM);
-    double gaussPSNR = I_reduced.CalculatePSNR(I_decodedGauss);
-    double uniformPSNR = I_reduced.CalculatePSNR(I_decodedUniform);
     double vectorPSNR = I_reduced.CalculatePSNR(I_decodedVector);
 
     // Display data in console
     std::cout << "BTC | PSNR : " << btcPSNR << " | Bits per pixel : " << I_encodedBTC.bitsPerPixel << std::endl;
     std::cout << "DCT | PSNR : " << dctPSNR << " | Bits per pixel : " << I_encodedDCT.bitsPerPixel << std::endl;
     std::cout << "DPCM | PSNR : " << dpcmPSNR << " | Bits per pixel : " << I_encodedDPCM.bitsPerPixel << std::endl;
-    std::cout << "Gauss | PSNR : " << gaussPSNR << " | Bits per pixel : " << I_encodedGuass.bitsPerPixel << std::endl;
-    std::cout << "Uniform | PSNR : " << uniformPSNR << " | Bits per pixel : " << I_encodedUniform.bitsPerPixel << std::endl;
     std::cout << "Vector | PSNR : " << vectorPSNR << " | Bits per pixel : " << I_encodedVector.bitsPerPixel << std::endl;
     
     // End clock

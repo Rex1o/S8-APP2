@@ -5,7 +5,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
-#include <Quantizers/GaussianPixelQuantizer.hpp>
 #include <BitStream.hpp>
 #include <Quantizers/LaplacianLloydMaxQuantizer.hpp>
 
