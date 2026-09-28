@@ -138,21 +138,6 @@ VectorArray VectorArray::DoubleVectors()
 
 uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize)
 {
-    if (vectorBitCount == 0 || vectorBitCount > 8)
-    {
-        throw std::invalid_argument("vectorBitCount must be between 1 and 8.");
-    }
-
-    if (blocSize == 0)
-    {
-        throw std::invalid_argument("blocSize must be greater than zero.");
-    }
-
-    if (image.GetWidth() % blocSize != 0 || image.GetHeight() % blocSize != 0)
-    {
-        throw std::invalid_argument("Image dimensions must be divisible by blocSize.");
-    }
-
     // Train dictionary
     VectorArray vectorArray = TrainLBG(image, vectorBitCount, blocSize);
 
@@ -183,33 +168,17 @@ uchar* VectorQuantizer::QuantizeAndPack(const ImageGray& image, uint8_t vectorBi
     // Dictionary
     uchar* dictionaryData = fullFile + sizeof(VectorQuantizedImageHeader);
     std::memcpy(dictionaryData, ucharDict.values, ucharDict.GetDataSize());
+    
     // Packed block indices
     uchar* packedIndices = dictionaryData + ucharDict.GetDataSize();
 
-    uint64_t bitBuffer = 0;
-    uint8_t bitsInBuffer = 0;
-    size_t outputIndex = 0;
+    BitWriter writer(packedIndices);
 
     for (uint32_t i = 0; i < blockCount; ++i)
     {
-        bitBuffer |= static_cast<uint64_t>(blockIndices[i]) << bitsInBuffer;
-
-        bitsInBuffer += vectorBitCount;
-
-        while (bitsInBuffer >= 8)
-        {
-            packedIndices[outputIndex++] = static_cast<uchar>(bitBuffer & 0xFF);
-
-            bitBuffer >>= 8;
-            bitsInBuffer -= 8;
-        }
+        writer.Write(blockIndices[i], vectorBitCount);
     }
-
-    // Write remaining bits
-    if (bitsInBuffer > 0)
-    {
-        packedIndices[outputIndex] = static_cast<uchar>(bitBuffer & 0xFF);
-    }
+    writer.Flush();
 
     delete[] blockIndices;
 
@@ -224,7 +193,6 @@ ImageGray VectorQuantizer::Unpack(uchar* packedData)
     }
 
     // Header
-
     VectorQuantizedImageHeader header;
 
     std::memcpy(&header, packedData, sizeof(VectorQuantizedImageHeader));
@@ -232,21 +200,6 @@ ImageGray VectorQuantizer::Unpack(uchar* packedData)
     const uint32_t height = header.height;
     const uint8_t vectorBitCount = header.vectorBitCount;
     const uint8_t blocSize = header.blocSize;
-
-    if (vectorBitCount == 0 || vectorBitCount > 8)
-    {
-        throw std::runtime_error("Invalid vectorBitCount in packed data.");
-    }
-
-    if (blocSize == 0)
-    {
-        throw std::runtime_error("Invalid blocSize in packed data.");
-    }
-
-    if (width % blocSize != 0 || height % blocSize != 0)
-    {
-        throw std::runtime_error("Invalid image dimensions in packed data.");
-    }
 
     // Dictionary information
 
@@ -270,37 +223,23 @@ ImageGray VectorQuantizer::Unpack(uchar* packedData)
     // Unpack indices and reconstruct blocks
     // ------------------------------------------------------------
 
-    uint64_t bitBuffer = 0;
-    uint8_t bitsInBuffer = 0;
-    size_t inputIndex = 0;
-
     const uint64_t indexMask = (1ULL << vectorBitCount) - 1ULL;
+    BitReader reader(packedIndices);
 
     for (uint32_t blockIndex = 0; blockIndex < blockCount; ++blockIndex)
     {
-        // Make sure enough bits are available
-        while (bitsInBuffer < vectorBitCount)
-        {
-            bitBuffer |= static_cast<uint64_t>(packedIndices[inputIndex++]) << bitsInBuffer;
-            bitsInBuffer += 8;
-        }
-
-        const uint32_t vectorIndex = static_cast<uint32_t>(bitBuffer & indexMask);
-
-        bitBuffer >>= vectorBitCount;
-        bitsInBuffer -= vectorBitCount;
-
-        // Find where this block belongs in the image
-        const uint32_t blockX = (blockIndex % blockCountX) * blocSize;
-
-        const uint32_t blockY = (blockIndex / blockCountX) * blocSize;
+        uchar value = reader.Read(vectorBitCount);
 
         // Dictionary vector
-        const uchar* vector = dictionaryData + static_cast<size_t>(vectorIndex) * vectorSize;
+        const uchar* vector = dictionaryData + static_cast<size_t>(value) * vectorSize;
 
         // Reconstruct block
         uint32_t pixelIndex = 0;
 
+        // Find where this block belongs in the image
+        const uint32_t blockX = (blockIndex % blockCountX) * blocSize;
+        const uint32_t blockY = (blockIndex / blockCountX) * blocSize;
+        
         for (uint32_t yBlock = 0; yBlock < blocSize; ++yBlock)
         {
             uchar* row = reconstructedImage.ptr<uchar>(blockY + yBlock) + blockX;
@@ -316,6 +255,7 @@ ImageGray VectorQuantizer::Unpack(uchar* packedData)
 }
 
 
+// Linde–Buzo–Gray
 VectorArray VectorQuantizer::TrainLBG(const ImageGray& image, uint8_t vectorBitCount, uint8_t blocSize)
 {
     if (image.GetWidth() % blocSize != 0 || image.GetHeight() % blocSize != 0)

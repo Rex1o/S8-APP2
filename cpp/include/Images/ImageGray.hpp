@@ -11,7 +11,7 @@ public:
     ImageGray(cv::Mat image);
     ImageGray(const ImageGray& image);
     
-    inline uchar GetPixel(uint x, uint y)
+    inline uchar GetPixel(uint x, uint y) const
     { 
         assert(m_OpenCVImage_.type() == CV_8UC1);
         return m_OpenCVImage_.at<uchar>(y, x);
@@ -23,18 +23,19 @@ public:
     
     ImageGray RescaleBicubic(uint newHeight, uint newWidth);
 
-    void GetMeanAndVariance(float& mean, float& variance) const;
+    void GetMeanAndSTDDev(float& mean, float& variance) const;
     void GetMinAndMax(uchar& min, uchar& max) const;
+    double CalculatePSNR(const ImageGray& other) const;
 
 private:
     friend class AdaptiveQuantizer;
     friend class BTCQuantizer;
     friend class DCTQuantizer;
     friend class DPCMQuantizer;
-    friend class VectorQuantizer;
-    friend class UniformQuantizer;
-    friend class FowardAdaptiveGaussQuantizer;
+    friend class GaussQuantizer;
     friend class JayantQuantizer;
+    friend class UniformQuantizer;
+    friend class VectorQuantizer;
 
     static double CardinalCubic(double p0, double p1, double p2, double p3, double t);
 };

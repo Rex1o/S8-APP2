@@ -1,7 +1,7 @@
 #pragma once
 #include <Images/ImageGray.hpp>
 
-struct ScalarQuantizedImageHeader
+struct UniformImageHeader
 {
     uint32_t width;
     uint32_t height;
@@ -15,20 +15,16 @@ public:
     static ImageGray Unpack(uchar* packedData);
 };
 
-struct AdaptiveGaussQuantizedImageHeader
+struct GaussImageHeader
 {
     uint32_t width;
     uint32_t height;
     float mean;
-    float variance;
+    float stdDev;
     uint8_t bitsPerPixel;
 };
 
-// This implemenation does not do a block per block version.
-// This is a guass representation of the entire image.
-// We could in the future make it so we add a headers for group of pixels. Let's say 8*8 pixels and then add the header per bloc of 8 bits for the max
-// and min values. 
-class FowardAdaptiveGaussQuantizer
+class GaussQuantizer
 {
 public:
     static uchar* QuantizeAndPack(const ImageGray& image, uint8_t bitCount);

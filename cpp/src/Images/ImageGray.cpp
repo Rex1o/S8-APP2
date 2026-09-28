@@ -181,14 +181,13 @@ ImageGray ImageGray::RescaleBicubic(uint newHeight, uint newWidth)
     return ImageGray(newImage);
 }
 
-void ImageGray::GetMeanAndVariance(float& mean, float& variance) const
+void ImageGray::GetMeanAndSTDDev(float& mean, float& stdDev) const
 { 
     cv::Scalar imageMean;
     cv::Scalar imageStdDev;
     cv::meanStdDev(m_OpenCVImage_, imageMean, imageStdDev);
     mean = static_cast<float>(imageMean[0]);
-    float stdDev = static_cast<float>(imageStdDev[0]);
-    variance =  stdDev * stdDev;
+    stdDev = static_cast<float>(imageStdDev[0]);
 }
 
 void ImageGray::GetMinAndMax(uchar& min, uchar& max) const
@@ -199,6 +198,39 @@ void ImageGray::GetMinAndMax(uchar& min, uchar& max) const
     cv::minMaxLoc(m_OpenCVImage_, &doubleMin, &doubleMax);
     min = static_cast<uchar>(doubleMin);
     max = static_cast<uchar>(doubleMax);
+}
+
+double ImageGray::CalculatePSNR(const ImageGray &other) const
+{
+    assert(GetWidth() == other.GetWidth());
+    assert(GetHeight() == other.GetHeight());
+
+    double squaredErrorSum = 0.0;
+    const size_t pixelCount = GetWidth() * GetHeight();
+
+    for (size_t y = 0; y < GetHeight(); ++y)
+    {
+        for (size_t x = 0; x < GetWidth(); ++x)
+        {
+            double pixel1 = static_cast<double>(m_OpenCVImage_.at<uchar>(y, x));
+            double pixel2 = static_cast<double>(other.m_OpenCVImage_.at<uchar>(y, x));
+
+            double error = pixel1 - pixel2;
+            squaredErrorSum += error * error;
+        }
+    }
+
+    double mse = squaredErrorSum / static_cast<double>(pixelCount);
+
+    if (mse == 0.0)
+    {
+        return std::numeric_limits<double>::infinity();
+    }
+
+    constexpr double maxPixelValue = 255.0;
+
+    return 10.0 * std::log10((maxPixelValue * maxPixelValue) / mse);
+    
 }
 
 // see https://en.wikipedia.org/wiki/Bicubic_interpolation
