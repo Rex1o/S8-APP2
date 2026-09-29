@@ -83,25 +83,34 @@ int main(int argcount, char** args)
     WritePackedData(vectorPath, I_encodedVector);
     std::vector<uchar> vectorFileData = ReadPackedData(vectorPath);
     ImageGray I_decodedVector = VectorQuantizer::Unpack(vectorFileData.data());
-    
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "\nVecteur Time: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";
     // DPCM
     PackedData I_encodedDPCM = DPCMQuantizer::QuantizeAndPack(I_reduced, 5);
     WritePackedData(dpcmPath, I_encodedDPCM);
     std::vector<uchar> dpcmFileData = ReadPackedData(dpcmPath);
     ImageGray I_decodedDPCM = DPCMQuantizer::Unpack(dpcmFileData.data());
     
+    end = std::chrono::high_resolution_clock::now();
+    std::cout << "\nDPCM Time: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";
     // BTC
     PackedData I_encodedBTC = BTCQuantizer::QuantizeAndPack(I_reduced, 8, 2);
     WritePackedData(btcPath, I_encodedBTC);
     std::vector<uchar> btcFileData = ReadPackedData(btcPath);
     ImageGray I_decodedBTC = BTCQuantizer::Unpack(btcFileData.data());
-    
+
+    end = std::chrono::high_resolution_clock::now();
+    std::cout << "\nBTC Time: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";
     // DCT
     // a 4 bit per pixel
     PackedData I_encodedDCT = DCTQuantizer::QuantizeAndPack(I_reduced, 5, 4);
     WritePackedData(dctPath, I_encodedDCT);
     std::vector<uchar> dctFileData = ReadPackedData(dctPath);
     ImageGray I_decodedDCT = DCTQuantizer::Unpack(dctFileData.data());
+
+    end = std::chrono::high_resolution_clock::now();
+    std::cout << "\nDCT Time: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";
     
     // Release memory
     delete[] I_encodedBTC.data;
@@ -128,8 +137,7 @@ int main(int argcount, char** args)
     std::cout << "Vector | PSNR : " << vectorPSNR << " | Bits per pixel : " << I_encodedVector.bitsPerPixel << std::endl;
     
     // End clock
-    auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "\nTime: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n";
+
     std::cout << "Results saved in: " << outputDirectory << '\n';
 
     return 0;
